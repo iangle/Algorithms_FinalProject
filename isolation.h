@@ -25,55 +25,40 @@ class Board {
 
 	public:
 		// Constructor
-		Board(Player * p1, Player * p2, int w = 7, int h = 7) {
-			width = w;
-			height = h;
-			move_count = 0;
-			player1 = p1;
-			player2 = p2;
-			active_player = p1;
-			inactive_player = p2;
+		Board(Player* p1, Player* p2, int w = 7, int h = 7);
 
-			board_state = std::vector<int>(BLANK, width * height + 3);
+		Player * get_active_player() { return this->active_player;}
 
-			board_state[board_state.size() - 1] = NOT_MOVED;
-			board_state[board_state.size() - 2] = NOT_MOVED;
-		}
+		Player * get_inactive_player() { return this->inactive_player; }
 
-		Player * get_active_player() {
-			return this->active_player;
-		}
-
-		Player * get_inactive_player() {
-			return this->inactive_player;
-		}
-
-		Player * get_opponent(Player * curr_player) {
-			if (curr_player == active_player) {
-				return this->active_player;
-			} else if (curr_player == inactive_player) {
-				return this->inactive_player;
-			} else {
-				std::cout << "'player' must be an object registered as a player in the current game" << std::endl;
-				return NULL;
-			}
-		}
+		Player* get_opponent(Player* curr_player);
 
 		//Copy constructor - not 100% sure if this works
-		Board(const Board &b) {
-			player1 = b.player1;
-			player2 = b.player2;
-			width = b.width;
-			height = b.height;
-			move_count = b.move_count;
-			active_player = b.active_player;
-			inactive_player = b.inactive_player;
-			board_state = b.board_state;
-		}
+		Board(const Board& b);
 
-		Board forecast_move(std::pair<int, int> move) {
+		Board forecast_move(std::pair<int, int> move);
 
-		}
+		bool move_is_legal(std::pair<int, int> move);
+
+		std::vector<std::pair<int, int>> get_blank_spaces();
+
+		std::pair<int, int> get_player_location(Player* p);
+
+		std::vector<std::pair<int, int>> get_legal_moves(Player * p = NULL);
+
+		void apply_move(std::pair<int, int> move);
+
+		bool is_winner(Player * p);
+
+		bool is_loser(Player* p);
+
+		float utility(Player * p);
+
+		std::vector<std::pair<int, int>> get_moves(std::pair<int, int> location);
+
+		void print_board();
+
+		void play();
 };
 
 #endif
