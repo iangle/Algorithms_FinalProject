@@ -59,15 +59,45 @@ bool Board::move_is_legal(std::pair<int, int> move) {
 
 std::vector<std::pair<int, int>> Board::get_blank_spaces()
 {
-	return std::vector<std::pair<int, int>>();
+    std::vector<std::pair<int, int>> blank_spaces;
+
+    for (int i = 0; i < width; i++) {
+        for (int j = 0; j < height; j++) {
+            if (board_state[i + j * height] == BLANK) {
+                blank_spaces.push_back(std::make_pair(i, j));
+            }
+        }
+    }
+	return blank_spaces;
 }
 
 std::pair<int, int> Board::get_player_location(Player* p)
 {
-	return std::pair<int, int>();
+    int indx;
+    board_state[board_state.size() - 2] = NOT_MOVED;
+    if (p == player1) {
+        if (board_state[board_state.size() - 1] == NOT_MOVED) {
+            return std::make_pair(-1, -1);
+        } else {
+            indx = board_state[board_state.size() - 1];
+        }
+    } else if (p == player2) {
+        if (board_state[board_state.size() - 2] == NOT_MOVED) {
+            return std::make_pair(-1, -1);
+        } else {
+            indx = board_state[board_state.size() - 2];
+        }
+    } else {
+        std::cout << "Invalid player in get_player_location..." << std::endl;
+    }
+
+    int w = indx / height;
+    int h = indx % height;
+
+    return std::make_pair(h, w);
 }
 
-std::vector<std::pair<int, int>> Board::get_legal_moves(Player* p)
+std::vector<std::pair<int, int>> Board::get_legal_moves(Player* p  = NULL)
 {
 	return std::vector<std::pair<int, int>>();
 }

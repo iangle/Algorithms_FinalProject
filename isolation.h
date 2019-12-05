@@ -25,7 +25,7 @@ class Board {
 
 	public:
 		// Constructor
-		Board(Player* p1, Player* p2, int w = 7, int h = 7);
+		Board(Player* p1, Player* p2, int w, int h);
 
 		Player * get_active_player() { return this->active_player;}
 
@@ -44,7 +44,7 @@ class Board {
 
 		std::pair<int, int> get_player_location(Player* p);
 
-		std::vector<std::pair<int, int>> get_legal_moves(Player * p = NULL);
+		std::vector<std::pair<int, int>> get_legal_moves(Player * p);
 
 		void apply_move(std::pair<int, int> move);
 
