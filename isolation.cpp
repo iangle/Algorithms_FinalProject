@@ -25,7 +25,7 @@ Player * Board::get_opponent(Player * curr_player) {
 	}
 	else {
 		std::cout << "'player' must be an object registered as a player in the current game" << std::endl;
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -49,12 +49,8 @@ Board Board::forecast_move(std::pair<int, int> move) {
 
 bool Board::move_is_legal(std::pair<int, int> move) {
 	int indx = move.first + (move.second * height);
-	if ((0 <= move.first && move.first < height) && (0 <= move.second && move.second < width) && (board_state[indx] == BLANK)) {
-		return true;
-	}
-	else {
-		return false;
-	}
+    return (0 <= move.first && move.first < height) && (0 <= move.second && move.second < width) &&
+           (board_state[indx] == BLANK);
 }
 
 std::vector<std::pair<int, int>> Board::get_blank_spaces()
@@ -74,7 +70,7 @@ std::vector<std::pair<int, int>> Board::get_blank_spaces()
 std::pair<int, int> Board::get_player_location(Player* p)
 {
     int indx;
-    board_state[board_state.size() - 2] = NOT_MOVED;
+
     if (p == player1) {
         if (board_state[board_state.size() - 1] == NOT_MOVED) {
             return std::make_pair(-1, -1);
@@ -97,28 +93,57 @@ std::pair<int, int> Board::get_player_location(Player* p)
     return std::make_pair(h, w);
 }
 
-std::vector<std::pair<int, int>> Board::get_legal_moves(Player* p  = NULL)
+std::vector<std::pair<int, int>> Board::get_legal_moves(Player* p  = nullptr)
 {
-	return std::vector<std::pair<int, int>>();
+    if (p == nullptr) {
+        p = active_player;
+    }
+    return this->get_moves(this->get_player_location(p));
 }
 
 void Board::apply_move(std::pair<int, int> move)
 {
+    int indx = move.first + (move.second * height);
+    int last_move_indx = int(active_player == player2) + 1;
+    board_state[board_state.size() - last_move_indx] = indx;
+    board_state[indx] = 1;
+    board_state[board_state.size() - 3] = (1 - board_state[board_state.size() - 3]); //Flips between 0 and 1
+    Player * temp = active_player;
+    active_player = inactive_player;
+    inactive_player = temp;
+    move_count++;
 }
 
-bool Board::is_winner(Player* p)
+bool Board::is_winner(Player* p) //Returns true if the player is the inactive player and the active player has no legal moves.
 {
+    if (p == inactive_player) {
+        if ((this->get_legal_moves(active_player)).empty()) {
+            return true;
+        }
+    }
 	return false;
 }
 
-bool Board::is_loser(Player* p)
+bool Board::is_loser(Player* p) //Returns true if p is the active player and if they have no legal moves
 {
+    if (p == active_player) {
+        if ((this->get_legal_moves(active_player)).empty()) {
+            return true;
+        }
+    }
 	return false;
 }
 
 float Board::utility(Player* p)
 {
-	return 0.0f;
+	if ((this->get_legal_moves(active_player)).empty()) {
+	    if (p = inactive_player) {
+	        return INFINITY;
+	    } else if (p = active_player) {
+	        return -INFINITY;
+	    }
+	}
+    return 0.0f;
 }
 
 std::vector<std::pair<int, int>> Board::get_moves(std::pair<int, int> location)
