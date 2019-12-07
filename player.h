@@ -2,11 +2,18 @@
 #define PLAYER_H_
 
 #include <utility>
+#include <random>
+
+class Board;
 
 class Player {
-private:
 public:
-	virtual std::pair <int, int> get_move() = 0;
+	virtual std::pair<int, int> * get_move(Board curr_game) = 0;
+};
+
+class RandomPlayer : public Player {
+public:
+	std::pair<int, int> * get_move(Board curr_game);
 };
 
 #endif

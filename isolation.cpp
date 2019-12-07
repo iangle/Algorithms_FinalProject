@@ -1,7 +1,7 @@
 #include "isolation.h"
 
 //Constructor
-Board::Board(Player* p1, Player* p2, int w = 7, int h = 7) {
+Board::Board(Player* p1, Player* p2, int w, int h) {
 	width = w;
 	height = h;
 	move_count = 0;
@@ -148,14 +148,119 @@ float Board::utility(Player* p)
 
 std::vector<std::pair<int, int>> Board::get_moves(std::pair<int, int> location)
 {
-	return std::vector<std::pair<int, int>>();
+	if (location == NOT_MOVED_PAIR) {
+		return this->get_blank_spaces();
+	}
+	int row = location.first;
+	int col = location.second;
+
+	std::vector<std::pair<int, int>> valid_directions;
+
+	for (int i = -1; i <= 1; i++) {
+		for (int j = -1; j <= 1; j++) {
+			if (j == 0 && i == 0) { //Moving in place is invalid
+				continue;
+			}
+			else {
+				valid_directions.push_back(std::make_pair(i, j));
+			}
+		}
+	}
+
+	std::vector<std::pair<int, int>> valid_moves;
+
+	for (int i = 0; i < valid_directions.size(); i++) {
+
+		int d_row, d_col;
+
+		d_row = valid_directions[i].first;
+		d_col = valid_directions[i].second;
+
+		std::pair<int, int> curr_move = std::make_pair(row + d_row, col + d_col);
+
+		if (this->move_is_legal(curr_move)) {
+			valid_moves.push_back(curr_move);
+		}
+	}
+
+	return valid_moves;
 }
 
 void Board::print_board()
 {
+	std::cout << "BOARD STATE" << std::endl;
+	std::cout << std::string("=", 20) << std::endl;
+	std::cout << this->to_string() << std::endl;
+	std::cout << std::string("=", 20) << std::endl;
 }
 
-void Board::play()
+std::string Board::to_string()
 {
+	int p1_loc = board_state[board_state.size() - 1];
+	int p2_loc = board_state[board_state.size() - 2];
+
+	std::stringstream ss;
+
+	for (int i = 0; i < this->height; i++) {
+		for (int j = 0; j < this->width; j++) {
+			std::string temp;
+			int indx = i + (j * (this->height));
+			int curr_state = board_state[indx];
+			if (curr_state == BLANK) {
+				temp = '-';
+			}
+			else if (p1_loc == indx) {
+				temp = '1';
+			}
+			else if (p2_loc == indx) {
+				temp = '2';
+			}
+			else {
+				temp = 'X';
+			}
+
+			ss << std::setw(col_width) << temp;
+		}
+		ss << '\n';
+	}
+
+	return ss.str();
+}
+
+std::pair<std::vector<std::pair<int, int>>, std::pair<Player*, std::string>> Board::play()
+{
+	std::vector<std::pair<int, int>> move_history;
+
+	while (true) {
+
+		std::vector<std::pair<int, int>> legal_player_moves = this->get_legal_moves();
+
+		Board game_copy = *this;
+
+		std::pair<int, int> * curr_move = this->active_player->get_move(game_copy);
+
+		if (curr_move = nullptr) {
+			curr_move = &NOT_MOVED_PAIR;
+		}
+
+		bool in_legal_moves = false;
+
+		for (int i = 0; i < legal_player_moves.size(); i++) {
+			if (legal_player_moves[i] == *curr_move) {
+				in_legal_moves = true;
+			}
+		}
+
+		if (!in_legal_moves) {
+			if (legal_player_moves.size() > 0) {
+				return std::make_pair(move_history, std::make_pair(this->inactive_player, "forfeit"));
+			}
+			return std::make_pair(move_history, std::make_pair(this->inactive_player, "illegal move"));
+		}
+
+		move_history.push_back(*curr_move);
+
+		this->apply_move(*curr_move);
+	}
 }
 

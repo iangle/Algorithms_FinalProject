@@ -5,11 +5,20 @@
 #include "player.h"
 #include <iostream>
 #include <utility>
+#include <string>
+#include <sstream>
+#include <iomanip>
+
 
 class Board {
+	protected:
+		int col_width = 5;
+
 	private:
 		int BLANK = 0;
 		int NOT_MOVED = -1;
+
+		std::pair<int, int> NOT_MOVED_PAIR = std::make_pair(-1, -1);
 
 		int width;
 		int height;
@@ -25,9 +34,9 @@ class Board {
 
 	public:
 		// Constructor
-		Board(Player* p1, Player* p2, int w, int h);
+		Board(Player* p1, Player* p2, int w = 7, int h = 7);
 
-		Player * get_active_player() { return this->active_player;}
+		Player * get_active_player() { return this->active_player; }
 
 		Player * get_inactive_player() { return this->inactive_player; }
 
@@ -58,7 +67,9 @@ class Board {
 
 		void print_board();
 
-		void play();
+		std::string to_string();
+
+		std::pair<std::vector<std::pair<int, int>>, std::pair<Player*, std::string>> play();
 };
 
 #endif
