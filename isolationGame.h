@@ -90,7 +90,7 @@ public:
 
     std::string to_string();
 
-    std::pair<std::vector<move>, std::pair<Player*, std::string>> play();
+    std::pair<std::vector<move>, std::pair<Player*, std::string>> play(bool print);
 };
 
 

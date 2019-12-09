@@ -16,7 +16,7 @@ Board::Board(Player* p1, Player* p2, int w, int h) {
 	active_player = p1;
 	inactive_player = p2;
 
-	board_state = std::vector<int>(BLANK, width * height + 3);
+	board_state = std::vector<int>(width * height + 3, BLANK);
 
 	board_state[board_state.size() - 1] = NOT_MOVED;
 	board_state[board_state.size() - 2] = NOT_MOVED;
@@ -195,9 +195,9 @@ std::vector<move> Board::get_moves(move location)
 void Board::print_board()
 {
 	std::cout << "BOARD STATE" << std::endl;
-	std::cout << std::string("=", 20) << std::endl;
+	std::cout << "======================" << std::endl;
 	std::cout << this->to_string() << std::endl;
-	std::cout << std::string("=", 20) << std::endl;
+	std::cout << "======================" << std::endl;
 }
 
 std::string Board::to_string()
@@ -233,11 +233,15 @@ std::string Board::to_string()
 	return ss.str();
 }
 
-std::pair<std::vector<move>, std::pair<Player*, std::string>> Board::play()
+std::pair<std::vector<move>, std::pair<Player*, std::string>> Board::play(bool print = false)
 {
 	std::vector<move> move_history;
 
 	while (true) {
+
+		if (print) {
+			this->print_board();
+		}
 
 		std::vector<move> legal_player_moves = this->get_legal_moves();
 
@@ -278,7 +282,7 @@ std::pair<std::vector<move>, std::pair<Player*, std::string>> Board::play()
 
 move RandomPlayer::get_move(Board curr_game)
 {
-    curr_game.print_board();
+    //curr_game.print_board();
 
     std::vector<move> legal_moves = curr_game.get_legal_moves(this);
 
