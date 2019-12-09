@@ -1,4 +1,10 @@
-#include "isolation.h"
+#include "isolationGame.h"
+
+move make_board_move(int a, int b) {
+    move m;
+    m.pair = std::make_pair(a, b);
+    return m;
+}
 
 //Constructor
 Board::Board(Player* p1, Player* p2, int w, int h) {
@@ -41,59 +47,59 @@ Board::Board(const Board &b){
 	board_state = b.board_state;
 }
 
-Board Board::forecast_move(std::pair<int, int> move) {
+Board Board::forecast_move(move m) {
 	Board new_board = *this;
-	new_board.apply_move(move);
+	new_board.apply_move(m);
 	return new_board;
 }
 
-bool Board::move_is_legal(std::pair<int, int> move) {
-	int indx = move.first + (move.second * height);
-    return (0 <= move.first && move.first < height) && (0 <= move.second && move.second < width) &&
-           (board_state[indx] == BLANK);
+bool Board::move_is_legal(move m) {
+	int index = m.pair.first + (m.pair.second * height);
+    return (0 <= m.pair.first && m.pair.first < height) && (0 <= m.pair.second && m.pair.second < width) &&
+           (board_state[index] == BLANK);
 }
 
-std::vector<std::pair<int, int>> Board::get_blank_spaces()
+std::vector<move> Board::get_blank_spaces()
 {
-    std::vector<std::pair<int, int>> blank_spaces;
+    std::vector<move> blank_spaces;
 
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
             if (board_state[i + j * height] == BLANK) {
-                blank_spaces.push_back(std::make_pair(i, j));
+                blank_spaces.push_back(make_board_move(i, j));
             }
         }
     }
 	return blank_spaces;
 }
 
-std::pair<int, int> Board::get_player_location(Player* p)
+move Board::get_player_location(Player* p)
 {
-    int indx;
+    int index;
 
     if (p == player1) {
         if (board_state[board_state.size() - 1] == NOT_MOVED) {
-            return std::make_pair(-1, -1);
+            return make_board_move(-1, -1);
         } else {
-            indx = board_state[board_state.size() - 1];
+            index = board_state[board_state.size() - 1];
         }
     } else if (p == player2) {
         if (board_state[board_state.size() - 2] == NOT_MOVED) {
-            return std::make_pair(-1, -1);
+            return make_board_move(-1, -1);
         } else {
-            indx = board_state[board_state.size() - 2];
+            index = board_state[board_state.size() - 2];
         }
     } else {
         std::cout << "Invalid player in get_player_location..." << std::endl;
     }
 
-    int w = indx / height;
-    int h = indx % height;
+    int w = index / height;
+    int h = index % height;
 
-    return std::make_pair(h, w);
+    return make_board_move(h, w);
 }
 
-std::vector<std::pair<int, int>> Board::get_legal_moves(Player* p  = nullptr)
+std::vector<move> Board::get_legal_moves(Player* p  = nullptr)
 {
     if (p == nullptr) {
         p = active_player;
@@ -101,12 +107,12 @@ std::vector<std::pair<int, int>> Board::get_legal_moves(Player* p  = nullptr)
     return this->get_moves(this->get_player_location(p));
 }
 
-void Board::apply_move(std::pair<int, int> move)
+void Board::apply_move(move m)
 {
-    int indx = move.first + (move.second * height);
-    int last_move_indx = int(active_player == player2) + 1;
-    board_state[board_state.size() - last_move_indx] = indx;
-    board_state[indx] = 1;
+    int index = m.pair.first + (m.pair.second * height);
+    int last_move_index = int(active_player == player2) + 1;
+    board_state[board_state.size() - last_move_index] = index;
+    board_state[index] = 1;
     board_state[board_state.size() - 3] = (1 - board_state[board_state.size() - 3]); //Flips between 0 and 1
     Player * temp = active_player;
     active_player = inactive_player;
@@ -137,24 +143,24 @@ bool Board::is_loser(Player* p) //Returns true if p is the active player and if 
 float Board::utility(Player* p)
 {
 	if ((this->get_legal_moves(active_player)).empty()) {
-	    if (p = inactive_player) {
+	    if (p == inactive_player) {
 	        return INFINITY;
-	    } else if (p = active_player) {
+	    } else if (p == active_player) {
 	        return -INFINITY;
 	    }
 	}
     return 0.0f;
 }
 
-std::vector<std::pair<int, int>> Board::get_moves(std::pair<int, int> location)
+std::vector<move> Board::get_moves(move location)
 {
-	if (location == NOT_MOVED_PAIR) {
+	if (location.pair == NOT_MOVED_PAIR.pair) {
 		return this->get_blank_spaces();
 	}
-	int row = location.first;
-	int col = location.second;
+	int row = location.pair.first;
+	int col = location.pair.second;
 
-	std::vector<std::pair<int, int>> valid_directions;
+	std::vector<move> valid_directions;
 
 	for (int i = -1; i <= 1; i++) {
 		for (int j = -1; j <= 1; j++) {
@@ -162,21 +168,21 @@ std::vector<std::pair<int, int>> Board::get_moves(std::pair<int, int> location)
 				continue;
 			}
 			else {
-				valid_directions.push_back(std::make_pair(i, j));
+				valid_directions.push_back(make_board_move(i, j));
 			}
 		}
 	}
 
-	std::vector<std::pair<int, int>> valid_moves;
+	std::vector<move> valid_moves;
 
-	for (int i = 0; i < valid_directions.size(); i++) {
+	for (auto & valid_direction : valid_directions) {
 
 		int d_row, d_col;
 
-		d_row = valid_directions[i].first;
-		d_col = valid_directions[i].second;
+		d_row = valid_direction.pair.first;
+		d_col = valid_direction.pair.second;
 
-		std::pair<int, int> curr_move = std::make_pair(row + d_row, col + d_col);
+		move curr_move = make_board_move(row + d_row, col + d_col);
 
 		if (this->move_is_legal(curr_move)) {
 			valid_moves.push_back(curr_move);
@@ -204,15 +210,15 @@ std::string Board::to_string()
 	for (int i = 0; i < this->height; i++) {
 		for (int j = 0; j < this->width; j++) {
 			std::string temp;
-			int indx = i + (j * (this->height));
-			int curr_state = board_state[indx];
+			int index = i + (j * (this->height));
+			int curr_state = board_state[index];
 			if (curr_state == BLANK) {
 				temp = '-';
 			}
-			else if (p1_loc == indx) {
+			else if (p1_loc == index) {
 				temp = '1';
 			}
-			else if (p2_loc == indx) {
+			else if (p2_loc == index) {
 				temp = '2';
 			}
 			else {
@@ -227,40 +233,64 @@ std::string Board::to_string()
 	return ss.str();
 }
 
-std::pair<std::vector<std::pair<int, int>>, std::pair<Player*, std::string>> Board::play()
+std::pair<std::vector<move>, std::pair<Player*, std::string>> Board::play()
 {
-	std::vector<std::pair<int, int>> move_history;
+	std::vector<move> move_history;
 
 	while (true) {
 
-		std::vector<std::pair<int, int>> legal_player_moves = this->get_legal_moves();
+		std::vector<move> legal_player_moves = this->get_legal_moves();
 
 		Board game_copy = *this;
 
-		std::pair<int, int> * curr_move = this->active_player->get_move(game_copy);
+		move curr_move = this->active_player->get_move(game_copy);
 
-		if (curr_move = nullptr) {
+        /*
+		if (curr_move == nullptr) {
 			curr_move = &NOT_MOVED_PAIR;
 		}
+        */
 
 		bool in_legal_moves = false;
 
-		for (int i = 0; i < legal_player_moves.size(); i++) {
-			if (legal_player_moves[i] == *curr_move) {
+		for (const auto & legal_player_move : legal_player_moves) {
+			if (legal_player_move.pair == curr_move.pair) {
 				in_legal_moves = true;
 			}
 		}
 
 		if (!in_legal_moves) {
-			if (legal_player_moves.size() > 0) {
+			if (legal_player_moves.empty()) {
 				return std::make_pair(move_history, std::make_pair(this->inactive_player, "forfeit"));
 			}
 			return std::make_pair(move_history, std::make_pair(this->inactive_player, "illegal move"));
 		}
 
-		move_history.push_back(*curr_move);
+		move_history.push_back(curr_move);
 
-		this->apply_move(*curr_move);
+		this->apply_move(curr_move);
 	}
 }
 
+// This is where the players decide to move
+//
+//
+
+move RandomPlayer::get_move(Board curr_game)
+{
+    curr_game.print_board();
+
+    std::vector<move> legal_moves = curr_game.get_legal_moves(this);
+
+    if (legal_moves.empty()) {
+        return make_board_move(-1, -1);
+    }
+
+    std::random_device random_device;
+    std::mt19937 engine{ random_device() };
+    std::uniform_int_distribution<int> dist(0, legal_moves.size() - 1);
+    move chosen_move = legal_moves[dist(engine)];
+
+    return chosen_move;
+
+}

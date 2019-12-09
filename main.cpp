@@ -1,7 +1,6 @@
-//#include "isolation.h"
-//#include "player.h"
+#include "isolationGame.h"
 #include <iostream>
-/*
+
 int main() {
 	Player* player1 = new RandomPlayer;
 	Player* player2 = new RandomPlayer;
@@ -12,9 +11,4 @@ int main() {
 
 
     return 0;
-}
-*/
-
-int main() {
-	std::cout << "Hello world" << std::endl;
 }
