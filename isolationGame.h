@@ -6,12 +6,14 @@
 #define ALGORITHMS_FINAL_ISOLATION_GAME_H
 
 #include <iostream>
+#include <ostream>
 #include <utility>
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <vector>
 #include <random>
+#include <algorithm>
 
 struct move {
     std::pair<int, int>  pair;
@@ -24,12 +26,36 @@ class Board;
 class Player {
 public:
     virtual move get_move(Board curr_game) = 0;
+	virtual std::string to_string() = 0;
 };
 
 class RandomPlayer : public Player {
 public:
     move get_move(Board curr_game) override;
+	std::string to_string();
 };
+
+
+class GreedyPlayer : public Player {
+public:
+	move get_move(Board curr_game) override;
+	float score(Board curr_game);
+	std::string to_string();
+};
+
+class MinmaxPlayer : public Player {
+private:
+	int depth = 5;
+public:
+	move get_move(Board curr_game) override;
+	move min_max(Board curr_game, int depth);
+	float min_value(Board curr_game, int depth);
+	float max_value(Board curr_game, int depth);
+	bool terminal_state(Board curr_game, int depth);
+	float score(Board curr_game);
+	std::string to_string();
+};
+
 
 class Board {
 protected:
