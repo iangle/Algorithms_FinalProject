@@ -6,6 +6,68 @@ move make_board_move(int a, int b) {
     return m;
 }
 
+float naive_score(Board curr_game, Player * p)
+{
+	if (curr_game.is_loser(p)) {
+		return -INFINITY;
+	}
+	else if (curr_game.is_winner(p)) {
+		return INFINITY;
+	}
+
+
+	float own_moves = float((curr_game.get_legal_moves(p)).size());
+	float opp_moves = float((curr_game.get_legal_moves(curr_game.get_opponent(p))).size());
+
+	return own_moves - 3 * opp_moves;
+}
+
+float center_score(Board curr_game, Player* p)
+{
+	if (curr_game.is_loser(p)) {
+		return -INFINITY;
+	}
+	else if (curr_game.is_winner(p)) {
+		return INFINITY;
+	}
+
+	int w, h;
+	w = curr_game.get_width() / 2;
+	h = curr_game.get_height() / 2;
+
+	move location = curr_game.get_player_location(p);
+
+	return float( (h - location.pair.first) * (h - location.pair.first) + (w - location.pair.second) * (w - location.pair.second));
+}
+
+float improved_score(Board curr_game, Player* p)
+{
+	if (curr_game.is_loser(p)) {
+		return -INFINITY;
+	}
+	else if (curr_game.is_winner(p)) {
+		return INFINITY;
+	}
+
+
+	float own_moves = float((curr_game.get_legal_moves(p)).size());
+	float opp_moves = float((curr_game.get_legal_moves(curr_game.get_opponent(p))).size());
+
+	return own_moves - opp_moves;
+}
+
+float open_move_score(Board curr_game, Player* p)
+{
+	if (curr_game.is_loser(p)) {
+		return -INFINITY;
+	}
+	else if (curr_game.is_winner(p)) {
+		return INFINITY;
+	}
+	return float(curr_game.get_legal_moves(p).size());
+
+}
+
 //Constructor
 Board::Board(Player* p1, Player* p2, int w, int h) {
 	width = w;
@@ -194,7 +256,7 @@ std::vector<move> Board::get_moves(move location)
 
 void Board::print_board()
 {
-	std::cout << "BOARD STATE" << std::endl;
+	std::cout << "BOARD STATE - " << "player 1 = " << this->player1->to_string() << " || player 2 = " << this->player2->to_string() << std::endl;
 	std::cout << "======================" << std::endl;
 	std::cout << this->to_string() << std::endl;
 	std::cout << "======================" << std::endl;
@@ -303,17 +365,6 @@ std::string RandomPlayer::to_string()
 	return std::string("RandomPlayer");
 }
 
-float GreedyPlayer::score(Board curr_game) {
-	if (curr_game.is_loser(this)) {
-		return -INFINITY;
-	}
-	else if (curr_game.is_winner(this)) {
-		return INFINITY;
-	}
-
-	return float((curr_game.get_legal_moves(this)).size());
-}
-
 std::string GreedyPlayer::to_string()
 {
 	return std::string("GreedyPlayer");
@@ -329,7 +380,7 @@ move GreedyPlayer::get_move(Board curr_game)
 
 	std::vector<float> scores;
 
-	for (int i = 0; i < legal_moves.size(); i++) {
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
 		move m = legal_moves[i];
 		scores.push_back(this->score(curr_game.forecast_move(m)));
 	}
@@ -338,7 +389,7 @@ move GreedyPlayer::get_move(Board curr_game)
 
 	int index = 0;
 
-	for (int i = 0; i < scores.size(); i++) {
+	for (unsigned i = 0; i < scores.size(); i++) {
 		if (scores[i] == max) {
 			index = i;
 		}
@@ -361,7 +412,7 @@ move MinmaxPlayer::min_max(Board curr_game, int depth)
 
 	std::vector<move> legal_moves = curr_game.get_legal_moves();
 
-	for (int i = 0; i < legal_moves.size(); i++) {
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
 		move m = legal_moves[i];
 		float min_value = this->min_value(curr_game.forecast_move(m), depth - 1);
 		if (min_value > best_score) {
@@ -383,7 +434,7 @@ float MinmaxPlayer::min_value(Board curr_game, int depth)
 
 	std::vector<move> legal_moves = curr_game.get_legal_moves();
 
-	for (int i = 0; i < legal_moves.size(); i++) {
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
 		move m = legal_moves[i];
 
 		float max_value = this->max_value(curr_game.forecast_move(m), depth - 1);
@@ -404,7 +455,7 @@ float MinmaxPlayer::max_value(Board curr_game, int depth)
 
 	std::vector<move> legal_moves = curr_game.get_legal_moves();
 
-	for (int i = 0; i < legal_moves.size(); i++) {
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
 		move m = legal_moves[i];
 
 		float min_value = this->min_value(curr_game.forecast_move(m), depth - 1);
@@ -427,23 +478,135 @@ bool MinmaxPlayer::terminal_state(Board curr_game, int depth)
 	return false;
 }
 
-float MinmaxPlayer::score(Board curr_game)
-{
-	if (curr_game.is_loser(this)) {
-		return -INFINITY;
-	}
-	else if (curr_game.is_winner(this)) {
-		return INFINITY;
-	}
-
-
-	float own_moves = (curr_game.get_legal_moves(this)).size();
-	float opp_moves = (curr_game.get_legal_moves(curr_game.get_opponent(this))).size();
-
-	return own_moves - opp_moves;
-}
 
 std::string MinmaxPlayer::to_string()
 {
-	return std::string("MinmaxPlayer");
+	return std::string("MinmaxPlayer using " + this->get_score_fn());
+}
+
+move AlphaBetaPlayer::get_move(Board curr_game)
+{
+	return this->alpha_beta(curr_game, this->depth, -INFINITY, INFINITY);
+}
+
+move AlphaBetaPlayer::alpha_beta(Board curr_game, int depth, float alpha = -INFINITY, float beta = INFINITY)
+{
+	float best_score = -INFINITY;
+
+	move best_move;
+
+	std::vector<move> legal_moves = curr_game.get_legal_moves();
+
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
+
+		move m = legal_moves[i];
+
+		float min_value = this->min_value(curr_game.forecast_move(m), depth - 1, alpha, beta);
+
+		if (min_value > best_score) {
+			best_score = min_value;
+			best_move = m;
+		}
+
+		if (best_score >= beta) {
+			break;
+		}
+
+		alpha = std::max(alpha, best_score);
+	}
+
+	return best_move;
+}
+
+float AlphaBetaPlayer::min_value(Board curr_game, int depth, float alpha = -INFINITY, float beta = INFINITY)
+{
+	if (this->terminal_state(curr_game, depth)) {
+		return this->score(curr_game);
+	}
+
+	float score = INFINITY;
+
+	std::vector<move> legal_moves = curr_game.get_legal_moves();
+
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
+
+		move m = legal_moves[i];
+
+		float max_value = this->max_value(curr_game.forecast_move(m), depth - 1, alpha, beta);
+
+		score = std::min(score, max_value);
+
+		if (score <= alpha) {
+			break;
+		}
+
+		beta = std::min(beta, score);
+
+	}
+	return score;
+}
+
+float AlphaBetaPlayer::max_value(Board curr_game, int depth, float alpha, float beta)
+{
+	if (this->terminal_state(curr_game, depth)) {
+		return this->score(curr_game);
+	}
+
+	float score = -INFINITY;
+
+	std::vector<move> legal_moves = curr_game.get_legal_moves();
+
+	for (unsigned i = 0; i < legal_moves.size(); i++) {
+
+		move m = legal_moves[i];
+
+		float min_value = this->min_value(curr_game.forecast_move(m), depth - 1, alpha, beta);
+
+		score = std::max(score, min_value);
+
+		if (score >= beta) {
+			break;
+		}
+
+		alpha = std::max(alpha, score);
+
+	}
+	return score;
+}
+
+bool AlphaBetaPlayer::terminal_state(Board curr_game, int depth)
+{
+	if (depth == 0) {
+		return true;
+	}
+	else if (curr_game.get_legal_moves().empty()) {
+		return true;
+	}
+	return false;
+}
+
+
+std::string AlphaBetaPlayer::to_string()
+{
+	return std::string("AlphaBetaPlayer using " + this->get_score_fn());
+}
+
+float Player::score(Board curr_game)
+{
+	if (this->get_score_fn() == "naive_score") {
+		return naive_score(curr_game, this);
+	}
+	else if (this->get_score_fn() == "center_score") {
+		return center_score(curr_game, this);
+	}
+	else if (this->get_score_fn() == "improved_score") {
+		return improved_score(curr_game, this);
+	}
+	else if (this->get_score_fn() == "open_move_score") {
+		return open_move_score(curr_game, this);
+	}
+	else {
+		std::cout << "No score function declared..." << std::endl;
+		return -INFINITY;
+	}
 }

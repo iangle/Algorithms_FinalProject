@@ -5,10 +5,21 @@
 #include <stdio.h>
 #include <time.h>
 
+std::vector<std::string> valid_score_functions;
+
+
 int main() {
 
-	Player* player1 = new MinmaxPlayer;
-	Player* player2 = new GreedyPlayer;
+	valid_score_functions.push_back("naive_score");
+	valid_score_functions.push_back("center_score");
+	valid_score_functions.push_back("improved_score");
+	valid_score_functions.push_back("open_move_score");
+
+	Player* player1 = new AlphaBetaPlayer;
+	Player* player2 = new AlphaBetaPlayer;
+
+	player1->set_score_fn(valid_score_functions[1]);
+	player2->set_score_fn(valid_score_functions[3]);
 
 	int p1wins, p2wins;
 
@@ -17,11 +28,11 @@ int main() {
 
 	srand(time(NULL));
 
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 25; i++) {
 
 		Board game1(player1, player2);
 
-		bool print = false;
+		bool print = true;
 
 		int x1 = rand() % 7;
 		int y1 = rand() % 7;

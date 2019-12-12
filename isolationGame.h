@@ -24,9 +24,14 @@ move make_board_move(int a, int b);
 class Board;
 
 class Player {
+private:
+	std::string score_fn = "";
 public:
     virtual move get_move(Board curr_game) = 0;
 	virtual std::string to_string() = 0;
+	float score(Board curr_game);
+	void set_score_fn(std::string fn) { score_fn = fn; }
+	std::string get_score_fn() { return score_fn; }
 };
 
 class RandomPlayer : public Player {
@@ -35,27 +40,35 @@ public:
 	std::string to_string();
 };
 
-
 class GreedyPlayer : public Player {
 public:
 	move get_move(Board curr_game) override;
-	float score(Board curr_game);
 	std::string to_string();
 };
 
 class MinmaxPlayer : public Player {
 private:
-	int depth = 5;
+	int depth = 4;
 public:
 	move get_move(Board curr_game) override;
 	move min_max(Board curr_game, int depth);
 	float min_value(Board curr_game, int depth);
 	float max_value(Board curr_game, int depth);
 	bool terminal_state(Board curr_game, int depth);
-	float score(Board curr_game);
 	std::string to_string();
 };
 
+class AlphaBetaPlayer : public Player {
+private:
+	int depth = 6;
+public:
+	move get_move(Board curr_game) override;
+	move alpha_beta(Board curr_game, int depth, float alpha, float beta);
+	float min_value(Board curr_game, int depth, float alpha, float beta);
+	float max_value(Board curr_game, int depth, float alpha, float beta);
+	bool terminal_state(Board curr_game, int depth);
+	std::string to_string();
+};
 
 class Board {
 protected:
@@ -80,6 +93,10 @@ private:
     Player * inactive_player;
 
 public:
+
+	int get_width() { return width; }
+	int get_height() { return height; }
+
     // Constructor
     Board(Player* p1, Player* p2, int w = 7, int h = 7);
 
@@ -118,6 +135,14 @@ public:
 
     std::pair<std::vector<move>, std::pair<Player*, std::string>> play(bool print);
 };
+
+float naive_score(Board curr_game, Player* p);
+
+float center_score(Board curr_game, Player* p);
+
+float improved_score(Board curr_game, Player* p);
+
+float open_move_score(Board curr_game, Player* p);
 
 
 #endif //ALGORITHMS_FINAL_ISOLATION_GAME_H
