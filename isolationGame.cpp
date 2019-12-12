@@ -588,7 +588,7 @@ bool AlphaBetaPlayer::terminal_state(Board curr_game, int depth)
 
 std::string AlphaBetaPlayer::to_string()
 {
-	return std::string("AlphaBetaPlayer using " + this->get_score_fn());
+	return std::string("AlphaBetaPlayer using " + this->get_score_fn() + " with depth " + std::to_string(depth));
 }
 
 float Player::score(Board curr_game)
