@@ -7,14 +7,14 @@
 
 std::vector<std::string> valid_score_functions;
 
+/*
 int NUM_MATCHES = 10;
 
-/*
 int main() {
 
 	bool print = false;
 
-	srand(time(NULL));
+	srand(int(time(NULL)));
 
 	valid_score_functions.push_back("naive_score");
 	valid_score_functions.push_back("center_score");
@@ -54,7 +54,7 @@ int main() {
 
 		for (unsigned j = 0; j < opponents.size(); j++) {
 
-			for (unsigned k = 0; k < NUM_MATCHES; k++) {
+			for (unsigned k = 0; k < unsigned(NUM_MATCHES); k++) {
 
 				Player* opponent = opponents[j];
 
@@ -94,9 +94,11 @@ int main() {
 
 	}
 
+	std::cout << "Press any key to continue...";
+	std::getchar();
+
 	return 0;
 }
-
 */
 
 
@@ -108,17 +110,17 @@ int main() {
 	valid_score_functions.push_back("open_move_score");
 
 	Player* player1 = new AlphaBetaPlayer;
-	Player* player2 = new AlphaBetaPlayer;
+	Player* player2 = new RandomPlayer;
 
 	player1->set_score_fn(valid_score_functions[1]);
-	player2->set_score_fn(valid_score_functions[3]);
+	//player2->set_score_fn(valid_score_functions[3]);
 
 	int p1wins, p2wins;
 
 	p1wins = 0;
 	p2wins = 0;
 
-	srand(time(NULL));
+	srand(int(time(NULL)));
 
 	for (int i = 0; i < 25; i++) {
 

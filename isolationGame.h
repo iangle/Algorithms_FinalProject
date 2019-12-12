@@ -15,6 +15,7 @@
 #include <random>
 #include <algorithm>
 
+
 struct move {
     std::pair<int, int>  pair;
 };
@@ -26,6 +27,8 @@ class Board;
 class Player {
 private:
 	std::string score_fn = "";
+protected:
+	int DEPTH_SETTING = 7;
 public:
     virtual move get_move(Board curr_game) = 0;
 	virtual std::string to_string() = 0;
@@ -48,7 +51,7 @@ public:
 
 class MinmaxPlayer : public Player {
 private:
-	int depth = 4;
+	int depth = this->DEPTH_SETTING;
 public:
 	move get_move(Board curr_game) override;
 	move min_max(Board curr_game, int depth);
@@ -60,7 +63,7 @@ public:
 
 class AlphaBetaPlayer : public Player {
 private:
-	int depth = 6;
+	int depth = this->DEPTH_SETTING;
 public:
 	move get_move(Board curr_game) override;
 	move alpha_beta(Board curr_game, int depth, float alpha, float beta);
