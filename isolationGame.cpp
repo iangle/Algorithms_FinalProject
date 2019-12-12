@@ -1,75 +1,110 @@
+/*Isaac Angle, Cameron Rutherford
+This is the implamentation part of the isolationGame header file*/
+
 #include "isolationGame.h"
 
+//creates a move object that corresponds to the x and y 
+//position denoted as a and b
 move make_board_move(int a, int b) {
     move m;
     m.pair = std::make_pair(a, b);
     return m;
 }
 
+//a scoring system used by the algorithm that values the 
+//opponents possible moves above its own
 float naive_score(Board curr_game, Player * p)
 {
+	//if player lost
 	if (curr_game.is_loser(p)) {
 		return -INFINITY;
 	}
+	//if player won
 	else if (curr_game.is_winner(p)) {
 		return INFINITY;
 	}
 
-
+	//holds the players moves
 	float own_moves = float((curr_game.get_legal_moves(p)).size());
+
+	//holds the opposing players moves
 	float opp_moves = float((curr_game.get_legal_moves(curr_game.get_opponent(p))).size());
 
+	//returns a float that values the opponents moves
+	//three times as much as the players moves
 	return own_moves - 3 * opp_moves;
 }
 
+//a scoring system that is used by the algorthim to
+//value being closer to the middle of the board
 float center_score(Board curr_game, Player* p)
 {
+	//if player lost
 	if (curr_game.is_loser(p)) {
 		return -INFINITY;
 	}
+	//if player won
 	else if (curr_game.is_winner(p)) {
 		return INFINITY;
 	}
-
+	
+	//used to compare the distance from the center
 	int w, h;
 	w = curr_game.get_width() / 2;
 	h = curr_game.get_height() / 2;
 
+	//get the players location
 	move location = curr_game.get_player_location(p);
 
+	//returns the comptation of the difference
 	return float( (h - location.pair.first) * (h - location.pair.first) + (w - location.pair.second) * (w - location.pair.second));
 }
 
+//a scoring system that is used by the algorthim to
+//value the players moves the same as the opposing players moves
 float improved_score(Board curr_game, Player* p)
 {
+	// player lost
 	if (curr_game.is_loser(p)) {
 		return -INFINITY;
 	}
+	//if player won
 	else if (curr_game.is_winner(p)) {
 		return INFINITY;
 	}
 
-
+	//gets the players legal moves
 	float own_moves = float((curr_game.get_legal_moves(p)).size());
+
+	//gets the opposing players moves
 	float opp_moves = float((curr_game.get_legal_moves(curr_game.get_opponent(p))).size());
 
+	//returns the difference between the players and opposing players moves
 	return own_moves - opp_moves;
 }
 
+//a scoring system that is used by the algorthim to
+//value the legal moves that the player can choose
 float open_move_score(Board curr_game, Player* p)
 {
+	//if player lost
 	if (curr_game.is_loser(p)) {
 		return -INFINITY;
 	}
+	//if player won
 	else if (curr_game.is_winner(p)) {
 		return INFINITY;
 	}
+
+	//returns the number of possible moves
 	return float(curr_game.get_legal_moves(p).size());
 
 }
 
 //Constructor
+//takes in the two players and the width and height of the board
 Board::Board(Player* p1, Player* p2, int w, int h) {
+
 	width = w;
 	height = h;
 	move_count = 0;
@@ -84,13 +119,19 @@ Board::Board(Player* p1, Player* p2, int w, int h) {
 	board_state[board_state.size() - 2] = NOT_MOVED;
 }
 
+//returns an active player or an inactive player 
+//depending on whether or not it is the players turn
+//takes in the current player
 Player * Board::get_opponent(Player * curr_player) {
+	//if active
 	if (curr_player == active_player) {
 		return this->active_player;
 	}
+	//if inactive
 	else if (curr_player == inactive_player) {
 		return this->inactive_player;
 	}
+	//else something went wrong
 	else {
 		std::cout << "'player' must be an object registered as a player in the current game" << std::endl;
 		return nullptr;
@@ -109,22 +150,28 @@ Board::Board(const Board &b){
 	board_state = b.board_state;
 }
 
+//forecasts the next move of the player
+//takes in the players move
 Board Board::forecast_move(move m) {
 	Board new_board = *this;
 	new_board.apply_move(m);
 	return new_board;
 }
 
+//checks if the move that is passed in is legal
+//if it is the function is true otherwise it is false
 bool Board::move_is_legal(move m) {
 	int index = m.pair.first + (m.pair.second * height);
     return (0 <= m.pair.first && m.pair.first < height) && (0 <= m.pair.second && m.pair.second < width) &&
            (board_state[index] == BLANK);
 }
 
+//gets the black spaces on the board and returns them
 std::vector<move> Board::get_blank_spaces()
 {
     std::vector<move> blank_spaces;
 
+	//adds the blank spaces to the board
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
             if (board_state[i + j * height] == BLANK) {
@@ -132,9 +179,13 @@ std::vector<move> Board::get_blank_spaces()
             }
         }
     }
+
+	//returns a vector of moves that contains the blank spaces
 	return blank_spaces;
 }
 
+//gets the player current location
+//takes in the player whose location is being returned
 move Board::get_player_location(Player* p)
 {
     int index;
@@ -161,6 +212,7 @@ move Board::get_player_location(Player* p)
     return make_board_move(h, w);
 }
 
+//gets the legal moves that a given player can make
 std::vector<move> Board::get_legal_moves(Player* p  = nullptr)
 {
     if (p == nullptr) {
@@ -169,16 +221,21 @@ std::vector<move> Board::get_legal_moves(Player* p  = nullptr)
     return this->get_moves(this->get_player_location(p));
 }
 
+//apllies a move to the board, takes in the move that 
+//the player wants to make
 void Board::apply_move(move m)
 {
     int index = m.pair.first + (m.pair.second * height);
     int last_move_index = int(active_player == player2) + 1;
+
     board_state[board_state.size() - last_move_index] = index;
     board_state[index] = 1;
     board_state[board_state.size() - 3] = (1 - board_state[board_state.size() - 3]); //Flips between 0 and 1
+
     Player * temp = active_player;
     active_player = inactive_player;
     inactive_player = temp;
+
     move_count++;
 }
 
@@ -214,6 +271,7 @@ float Board::utility(Player* p)
     return 0.0f;
 }
 
+//gets the possible moves from the given location
 std::vector<move> Board::get_moves(move location)
 {
 	if (location.pair == NOT_MOVED_PAIR.pair) {
@@ -254,6 +312,7 @@ std::vector<move> Board::get_moves(move location)
 	return valid_moves;
 }
 
+//this function uses the toString() function to print edges and names around the board
 void Board::print_board()
 {
 	std::cout << "BOARD STATE - " << "player 1 = " << this->player1->to_string() << " || player 2 = " << this->player2->to_string() << std::endl;
@@ -262,6 +321,8 @@ void Board::print_board()
 	std::cout << "======================" << std::endl;
 }
 
+
+//this function prints out the board
 std::string Board::to_string()
 {
 	int p1_loc = board_state[board_state.size() - 1];
@@ -274,15 +335,19 @@ std::string Board::to_string()
 			std::string temp;
 			int index = i + (j * (this->height));
 			int curr_state = board_state[index];
+			//if mov not available put a -
 			if (curr_state == BLANK) {
 				temp = '-';
 			}
+			//if player ones loaction put a 1
 			else if (p1_loc == index) {
 				temp = '1';
 			}
+			//if player two's locations put a 2
 			else if (p2_loc == index) {
 				temp = '2';
 			}
+			//otherwise put an x because a player has already been there
 			else {
 				temp = 'X';
 			}
@@ -295,6 +360,8 @@ std::string Board::to_string()
 	return ss.str();
 }
 
+//this function plays the game, the user passes in a boolean
+//that tells the function whether or not to print out the board.
 std::pair<std::vector<move>, std::pair<Player*, std::string>> Board::play(bool print = false)
 {
 	std::vector<move> move_history;
@@ -339,7 +406,7 @@ std::pair<std::vector<move>, std::pair<Player*, std::string>> Board::play(bool p
 }
 
 // This is where the players decide to move
-//
+// 
 //
 
 move RandomPlayer::get_move(Board curr_game)
@@ -360,16 +427,20 @@ move RandomPlayer::get_move(Board curr_game)
 
 }
 
+//gives a name to the random player for printing purposes
 std::string RandomPlayer::to_string()
 {
 	return std::string("RandomPlayer");
 }
 
+//gives a name to the greedy player for printing purposes
 std::string GreedyPlayer::to_string()
 {
 	return std::string("GreedyPlayer");
 }
 
+//gets the move for the greedy player
+//takes in the board of the current game
 move GreedyPlayer::get_move(Board curr_game)
 {
 	std::vector<move> legal_moves = curr_game.get_legal_moves(this);
@@ -399,12 +470,15 @@ move GreedyPlayer::get_move(Board curr_game)
 
 }
 
+//gets the moves for the min max player
+//takes in the board to the current game
 move MinmaxPlayer::get_move(Board curr_game)
 {
 
 	return this->min_max(curr_game, this->depth);
 }
 
+//creates the algorithm that the min max player uses to move around the board
 move MinmaxPlayer::min_max(Board curr_game, int depth)
 {
 	float best_score = -INFINITY;
@@ -412,6 +486,7 @@ move MinmaxPlayer::min_max(Board curr_game, int depth)
 
 	std::vector<move> legal_moves = curr_game.get_legal_moves();
 
+	//get the best move
 	for (unsigned i = 0; i < legal_moves.size(); i++) {
 		move m = legal_moves[i];
 		float min_value = this->min_value(curr_game.forecast_move(m), depth - 1);
@@ -421,9 +496,12 @@ move MinmaxPlayer::min_max(Board curr_game, int depth)
 		}
 	}
 
+	//return best move
 	return best_move;
 }
 
+//gets the minimum value for the min max player
+//used to compute the algorithm
 float MinmaxPlayer::min_value(Board curr_game, int depth)
 {
 	if (this->terminal_state(curr_game, depth)) {
@@ -445,6 +523,8 @@ float MinmaxPlayer::min_value(Board curr_game, int depth)
 	return score;
 }
 
+//gets the maximum value for the min max player
+//used to compute the algorithm
 float MinmaxPlayer::max_value(Board curr_game, int depth)
 {
 	if (this->terminal_state(curr_game, depth)) {
@@ -478,17 +558,19 @@ bool MinmaxPlayer::terminal_state(Board curr_game, int depth)
 	return false;
 }
 
-
+//returns the score used by the min max player
 std::string MinmaxPlayer::to_string()
 {
 	return std::string("MinmaxPlayer using " + this->get_score_fn());
 }
 
+//gets the move for the aplha beta player
 move AlphaBetaPlayer::get_move(Board curr_game)
 {
 	return this->alpha_beta(curr_game, this->depth, -INFINITY, INFINITY);
 }
 
+//computes the algorithm that the apla beta player uses to move around the board
 move AlphaBetaPlayer::alpha_beta(Board curr_game, int depth, float alpha = -INFINITY, float beta = INFINITY)
 {
 	float best_score = -INFINITY;
@@ -518,6 +600,8 @@ move AlphaBetaPlayer::alpha_beta(Board curr_game, int depth, float alpha = -INFI
 	return best_move;
 }
 
+//gets the minimum value for the alpha beta player
+//used to compute the algorithm
 float AlphaBetaPlayer::min_value(Board curr_game, int depth, float alpha = -INFINITY, float beta = INFINITY)
 {
 	if (this->terminal_state(curr_game, depth)) {
@@ -546,6 +630,8 @@ float AlphaBetaPlayer::min_value(Board curr_game, int depth, float alpha = -INFI
 	return score;
 }
 
+//gets the maximum value for the alpha beta player
+//used to compute the algorithm
 float AlphaBetaPlayer::max_value(Board curr_game, int depth, float alpha, float beta)
 {
 	if (this->terminal_state(curr_game, depth)) {
@@ -586,25 +672,32 @@ bool AlphaBetaPlayer::terminal_state(Board curr_game, int depth)
 }
 
 
+//returns the scoring system that the alpha beta player is using
 std::string AlphaBetaPlayer::to_string()
 {
 	return std::string("AlphaBetaPlayer using " + this->get_score_fn() + " with depth " + std::to_string(depth));
 }
 
+//gets the players scores from the given current game
 float Player::score(Board curr_game)
 {
+	//naive score
 	if (this->get_score_fn() == "naive_score") {
 		return naive_score(curr_game, this);
 	}
+	//center score
 	else if (this->get_score_fn() == "center_score") {
 		return center_score(curr_game, this);
 	}
+	//improved score
 	else if (this->get_score_fn() == "improved_score") {
 		return improved_score(curr_game, this);
 	}
+	//open move score
 	else if (this->get_score_fn() == "open_move_score") {
 		return open_move_score(curr_game, this);
 	}
+	//just in case none of those are true
 	else {
 		std::cout << "No score function declared..." << std::endl;
 		return -INFINITY;
